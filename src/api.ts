@@ -52,7 +52,7 @@ export async function fetchApi<T>(
   console.log(`📊 [API] Получен ответ: ${response.status} ${response.statusText}`);
 
   if (!response.ok) {
-    if (response.status === 401 || response.status === 403) {
+    if (response.status === 401) {
       clearToken();
       throw new Error('Не авторизован. Войдите снова.');
     }
