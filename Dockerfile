@@ -13,8 +13,8 @@ ARG VITE_API_URL=http://localhost:8091
 # Копируем package files
 COPY package*.json ./
 
-# Устанавливаем зависимости
-RUN npm ci --only=production
+# Устанавливаем все зависимости (включая dev, нужны для сборки)
+RUN npm ci
 
 # Копируем исходники
 COPY . .
