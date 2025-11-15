@@ -109,8 +109,8 @@ export interface AccessStats {
 export interface GrantAccessRequest {
   clientId: string;
   networkId: string;
-  dailyRequestLimit?: number;
-  monthlyRequestLimit?: number;
+  dailyRequestLimit?: number | null;
+  monthlyRequestLimit?: number | null;
 }
 
 export interface NetworkLimit {

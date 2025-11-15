@@ -29,16 +29,17 @@ export const clearToken = (): void => {
 // Базовая функция для запросов
 export async function fetchApi<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
 ): Promise<T> {
   const token = getToken();
-  const headers: HeadersInit = {
-    'Content-Type': 'application/json',
-    ...options.headers,
-  };
+  const headers = new Headers(options.headers ?? undefined);
+
+  if (!headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json');
+  }
 
   if (token && !endpoint.includes('/auth/')) {
-    headers['Authorization'] = `Bearer ${token}`;
+    headers.set('Authorization', `Bearer ${token}`);
   }
 
   console.log(`🔍 [API] Отправляем ${options.method || 'GET'} запрос к ${endpoint}`);
