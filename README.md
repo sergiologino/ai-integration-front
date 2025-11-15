@@ -1,46 +1,215 @@
-# Getting Started with Create React App
+# AI Integration Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Фронтенд-приложение для управления AI Integration Service - админ-панель для управления нейросетями, клиентами и мониторинга запросов.
 
-## Available Scripts
+## Технологии
 
-In the project directory, you can run:
+- **React 19** - UI библиотека
+- **TypeScript** - типизация
+- **Vite** - сборщик и dev-сервер
+- **Tailwind CSS** - стилизация
+- **Axios** - HTTP клиент
 
-### `npm start`
+## Требования
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+- Node.js 18+ 
+- npm или yarn
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## Установка
 
-### `npm test`
+```bash
+# Установка зависимостей
+npm install
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+# Создайте файл .env (скопируйте из .env.example)
+cp .env.example .env
+```
 
-### `npm run build`
+## Конфигурация
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Отредактируйте файл `.env`:
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```env
+# URL бекенд API
+VITE_API_URL=http://localhost:8091
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## Запуск для разработки
 
-### `npm run eject`
+```bash
+# Запуск dev-сервера на http://localhost:3000
+npm run dev
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+Приложение автоматически откроется в браузере. Hot reload включен.
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Сборка для продакшена
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+```bash
+# Сборка оптимизированной версии
+npm run build
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+# Предпросмотр production сборки
+npm run preview
+```
 
-## Learn More
+Собранные файлы будут в папке `dist/`.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## Docker
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### Сборка образа
+
+```bash
+# Сборка с дефолтным API URL
+docker build -t ai-integration-frontend .
+
+# Сборка с кастомным API URL
+docker build --build-arg VITE_API_URL=https://api.example.com -t ai-integration-frontend .
+```
+
+### Запуск контейнера
+
+```bash
+docker run -d -p 3000:80 --name ai-frontend ai-integration-frontend
+```
+
+Приложение будет доступно на `http://localhost:3000`
+
+## Структура проекта
+
+```
+src/
+├── components/          # React компоненты
+│   ├── Login.tsx       # Страница входа
+│   ├── Dashboard.tsx   # Главная панель
+│   ├── NetworksManager.tsx        # Управление нейросетями
+│   ├── ClientsManager.tsx         # Управление клиентами
+│   ├── NetworkAccessManager.tsx   # Управление доступами
+│   ├── NetworkAccessTests.tsx     # Тесты API
+│   ├── LogsViewer.tsx            # Просмотр логов
+│   └── StatsPanel.tsx            # Статистика
+├── api.ts              # API клиент
+├── types.ts            # TypeScript типы
+├── App.tsx             # Корневой компонент
+├── main.tsx            # Entry point
+├── index.css           # Глобальные стили
+└── App.css             # Стили приложения
+```
+
+## Основные функции
+
+### 🔐 Аутентификация
+- Вход через JWT токен
+- Автоматическое сохранение сессии
+- Защита роутов
+
+### 🧠 Управление нейросетями
+- Добавление/редактирование/удаление нейросетей
+- Поддержка различных провайдеров (OpenAI, Yandex, Anthropic, Mistral, Sber, Whisper)
+- Настройка приоритетов и лимитов
+- Примеры запросов для каждого провайдера
+
+### 🔑 Управление клиентами
+- Создание клиентских приложений
+- Генерация и регенерация API ключей
+- Активация/деактивация клиентов
+
+### 🔗 Управление доступами
+- Предоставление доступа клиентам к нейросетям
+- Настройка дневных и месячных лимитов
+- Отзыв доступа
+
+### 📊 Мониторинг
+- Статистика использования
+- Просмотр логов запросов
+- Фильтрация по клиентам и нейросетям
+
+### 🧪 Тестирование
+- Встроенные тесты API
+- Проверка всех endpoint'ов
+- Детальные результаты тестов
+
+## API Endpoints
+
+Приложение взаимодействует со следующими endpoint'ами бекенда:
+
+- `POST /api/auth/login` - Вход
+- `GET /api/admin/networks` - Список нейросетей
+- `POST /api/admin/networks` - Создание нейросети
+- `PUT /api/admin/networks/{id}` - Обновление нейросети
+- `DELETE /api/admin/networks/{id}` - Удаление нейросети
+- `GET /api/admin/clients` - Список клиентов
+- `POST /api/admin/clients` - Создание клиента
+- `PUT /api/admin/clients/{id}` - Обновление клиента
+- `DELETE /api/admin/clients/{id}` - Удаление клиента
+- `POST /api/admin/clients/{id}/regenerate-key` - Регенерация API ключа
+- `GET /api/admin/access` - Список доступов
+- `POST /api/admin/access` - Предоставление доступа
+- `DELETE /api/admin/access/{id}` - Отзыв доступа
+- `GET /api/admin/logs` - Логи запросов
+- `GET /api/admin/stats` - Статистика
+
+## Разработка
+
+### Линтинг
+
+```bash
+npm run lint
+```
+
+### Форматирование кода
+
+Проект использует ESLint с TypeScript и React правилами.
+
+## Deployment
+
+### Production сборка
+
+1. Соберите проект:
+```bash
+npm run build
+```
+
+2. Разверните содержимое папки `dist/` на любом статическом хостинге (Nginx, Apache, Vercel, Netlify и т.д.)
+
+### Nginx конфигурация
+
+Пример конфигурации для Nginx включен в `nginx.conf`. Основные моменты:
+
+- SPA routing (все запросы идут на index.html)
+- Gzip сжатие
+- Кэширование статических файлов
+- Health check endpoint
+
+## Troubleshooting
+
+### CORS ошибки
+
+Убедитесь, что бекенд настроен на прием запросов с вашего домена. В `SecurityConfig.java` должно быть:
+
+```java
+configuration.setAllowedOriginPatterns(List.of("*"));
+```
+
+### Ошибки подключения к API
+
+Проверьте, что:
+1. Бекенд запущен и доступен
+2. `VITE_API_URL` в `.env` указывает на правильный адрес
+3. Нет проблем с CORS
+
+### Проблемы с аутентификацией
+
+1. Создайте админа через Swagger UI бекенда
+2. Используйте эти credentials для входа
+3. Токен сохраняется в localStorage
+
+## Связь с бекендом
+
+Этот фронтенд работает с бекенд-сервисом:
+- Репозиторий: `E:\1_MyProjects\AltaProject (AltaTrack)\noteapp-ai-integration`
+- API документация: http://localhost:8091/swagger-ui.html (когда бекенд запущен)
+
+## Лицензия
+
+Proprietary
