@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { userLogin, userRegister, oauthSignIn } from '../api';
+import { userLogin, userRegister, oauthAuthorizeUrl, API_BASE } from '../api';
+import { useEffect } from 'react';
 
 interface Props {
   onLoginSuccess: () => void;
@@ -11,6 +12,17 @@ export const UserAuth: React.FC<Props> = ({ onLoginSuccess }) => {
   const [password, setPassword] = useState('');
   const [repeatPassword, setRepeatPassword] = useState('');
   const [name, setName] = useState('');
+  // Обработка возврата из OAuth: ?ok=1&provider=...&token=...
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const ok = params.get('ok');
+    const token = params.get('token');
+    if (ok === '1' && token) {
+      localStorage.setItem('user_token', token);
+      onLoginSuccess();
+    }
+  }, [onLoginSuccess]);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -33,7 +45,7 @@ export const UserAuth: React.FC<Props> = ({ onLoginSuccess }) => {
     try {
       if (!name.trim()) throw new Error('Укажите имя');
       if (password !== repeatPassword) throw new Error('Пароли не совпадают');
-      await userRegister({ name, email, password });
+      await userRegister({ fullName: name, email, password, repeatPassword });
       onLoginSuccess();
     } catch (err: any) {
       setError(err.message || 'Ошибка регистрации');
@@ -42,34 +54,12 @@ export const UserAuth: React.FC<Props> = ({ onLoginSuccess }) => {
     }
   };
 
-  const handleGoogle = async () => {
-    setError(''); setLoading(true);
-    try {
-      // Открываем popup OAuth (упрощенно: пока ожидаем id_token из prompt)
-      // Здесь предполагается, что фронт получает id_token от Google One Tap / OAuth flow
-      const idToken = await window.prompt('Вставьте Google ID token');
-      if (!idToken) return;
-      await oauthSignIn('google', idToken);
-      onLoginSuccess();
-    } catch (err: any) {
-      setError(err.message || 'Ошибка входа через Google');
-    } finally {
-      setLoading(false);
-    }
+  const handleGoogle = () => {
+    window.location.href = oauthAuthorizeUrl('google');
   };
 
-  const handleYandex = async () => {
-    setError(''); setLoading(true);
-    try {
-      const token = await window.prompt('Вставьте Yandex OAuth token');
-      if (!token) return;
-      await oauthSignIn('yandex', token);
-      onLoginSuccess();
-    } catch (err: any) {
-      setError(err.message || 'Ошибка входа через Yandex');
-    } finally {
-      setLoading(false);
-    }
+  const handleYandex = () => {
+    window.location.href = oauthAuthorizeUrl('yandex');
   };
 
   return (

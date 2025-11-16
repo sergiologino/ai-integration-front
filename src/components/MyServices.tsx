@@ -53,7 +53,7 @@ export const MyServices: React.FC<Props> = ({ onLogout }) => {
     e.preventDefault();
     try {
       if (editing) await updateMyClient(editing.id, { name, description, isActive });
-      else await createMyClient({ name, description, isActive });
+      else await createMyClient({ name, description });
       setIsModalOpen(false);
       load();
     } catch (e: any) {
@@ -86,7 +86,15 @@ export const MyServices: React.FC<Props> = ({ onLogout }) => {
     setSelectedNetworkIds(client.networkIds || []);
     try {
       const nets = await getAvailableNetworks();
-      setAvailableNetworks(nets);
+      // нормализуем данные (бэк сейчас отдаёт code/label)
+      const normalized = nets.map((n: any) => ({
+        id: n.id || n.code,
+        displayName: n.displayName || n.label || n.code,
+        provider: n.provider || '',
+        modelName: n.modelName || '',
+        isActive: n.isActive ?? true,
+      }));
+      setAvailableNetworks(normalized);
     } catch (e) {
       // ignore
     }

@@ -11,7 +11,7 @@ import type {
   UsageStats,
 } from './types';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8091';
+export const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8091';
 
 // Вспомогательная функция для работы с токеном
 const getToken = (): string | null => {
@@ -198,7 +198,7 @@ export const userLogin = async (payload: { email: string; password: string }) =>
   return res;
 };
 
-export const userRegister = async (payload: { name: string; email: string; password: string }) => {
+export const userRegister = async (payload: { fullName: string; email: string; password: string; repeatPassword: string }) => {
   const res = await fetchApi<{ token: string; email: string }>('/api/user/auth/register', {
     method: 'POST',
     body: JSON.stringify(payload),
@@ -211,14 +211,7 @@ export const userLogout = () => {
   localStorage.removeItem('user_token');
 };
 
-export const oauthSignIn = async (provider: 'google' | 'yandex', token: string) => {
-  const res = await fetchApi<{ token: string; email: string }>(`/api/user/auth/oauth/${provider}`, {
-    method: 'POST',
-    body: JSON.stringify({ token }),
-  });
-  localStorage.setItem('user_token', res.token);
-  return res;
-};
+export const oauthAuthorizeUrl = (provider: 'google' | 'yandex') => `${API_BASE}/api/user/auth/oauth2/authorize/${provider}`;
 
 // все запросы кабинета отправляем с user_token
 async function userFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
@@ -237,7 +230,7 @@ async function userFetch<T>(endpoint: string, options: RequestInit = {}): Promis
 }
 
 export const getMyClients = () => userFetch<any[]>('/api/user/clients');
-export const createMyClient = (payload: { name: string; description: string; isActive: boolean }) =>
+export const createMyClient = (payload: { name: string; description: string }) =>
   userFetch<any>('/api/user/clients', { method: 'POST', body: JSON.stringify(payload) });
 export const updateMyClient = (id: string, payload: { name: string; description: string; isActive: boolean }) =>
   userFetch<any>(`/api/user/clients/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
