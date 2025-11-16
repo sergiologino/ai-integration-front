@@ -8,7 +8,7 @@ FROM node:20-alpine AS build
 WORKDIR /app
 
 # ARG для API URL (передается при сборке)
-ARG VITE_API_URL=http://localhost:8091
+ARG VITE_API_URL=https://sergiologino-zettelkastenapp-ai-integration-bce3.twc1.net
 
 # Копируем package files
 COPY package*.json ./
