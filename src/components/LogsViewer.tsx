@@ -9,6 +9,11 @@ export const LogsViewer: React.FC = () => {
   const [page, setPage] = useState<number>(0);
   const [totalPages, setTotalPages] = useState<number>(0);
   const [selectedLog, setSelectedLog] = useState<RequestLog | null>(null);
+  const [showPretty, setShowPretty] = useState<boolean>(true);
+
+  const copyToClipboard = (value: string) => {
+    navigator.clipboard.writeText(value || '');
+  };
 
   useEffect(() => {
     loadLogs();
@@ -32,9 +37,23 @@ export const LogsViewer: React.FC = () => {
     return new Date(dateString).toLocaleString('ru-RU');
   };
 
-  const truncateText = (text: string, maxLength: number = 100) => {
+  const truncateText = (text: string, maxLength: number = 140) => {
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength) + '...';
+  };
+
+  const tryPrettyJson = (text: string | undefined | null) => {
+    if (!text) return '';
+    const trimmed = text.trim();
+    if (!(trimmed.startsWith('{') || trimmed.startsWith('['))) {
+      return text; // не JSON — показываем как есть
+    }
+    try {
+      const parsed = JSON.parse(trimmed);
+      return JSON.stringify(parsed, null, 2);
+    } catch {
+      return text; // невалидный JSON — оставляем исходный
+    }
   };
 
   if (loading && logs.length === 0) {
@@ -65,38 +84,45 @@ export const LogsViewer: React.FC = () => {
 
       {/* Таблица логов */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
+        <table className="min-w-full divide-y divide-gray-200 table-fixed">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
                 Дата
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
                 Клиент
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-56">
                 Нейросеть
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-28">
                 User ID
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[360px]">
                 Промпт
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
                 Статус
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-20">
                 Токены
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
                 Действия
               </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {logs.map((log) => (
-              <tr key={log.id} className="hover:bg-gray-50">
+              <tr
+                key={log.id}
+                className="hover:bg-gray-50 cursor-pointer"
+                onClick={() => {
+                  setSelectedLog(log);
+                  setShowPretty(true);
+                }}
+              >
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {formatDate(log.createdAt)}
                 </td>
@@ -109,8 +135,10 @@ export const LogsViewer: React.FC = () => {
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {log.externalUserId.substring(0, 8)}...
                 </td>
-                <td className="px-6 py-4 text-sm text-gray-500 max-w-xs">
-                  {truncateText(log.prompt, 60)}
+                <td className="px-6 py-4 text-sm text-gray-500">
+                  <div className="max-w-[360px] break-all truncate">
+                    {truncateText(log.prompt, 200)}
+                  </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span
@@ -127,12 +155,7 @@ export const LogsViewer: React.FC = () => {
                   {log.tokensUsed || '-'}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <button
-                    onClick={() => setSelectedLog(log)}
-                    className="text-indigo-600 hover:text-indigo-900"
-                  >
-                    Детали
-                  </button>
+                  <span className="text-gray-400">Открыть</span>
                 </td>
               </tr>
             ))}
@@ -168,84 +191,96 @@ export const LogsViewer: React.FC = () => {
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex items-center justify-center min-h-screen px-4">
             <div className="fixed inset-0 bg-black opacity-30" onClick={() => setSelectedLog(null)}></div>
-            <div className="relative bg-white rounded-lg shadow-xl max-w-4xl w-full p-6 max-h-[90vh] overflow-y-auto">
-              <div className="flex justify-between items-start mb-4">
-                <h3 className="text-xl font-bold text-gray-900">Детали запроса</h3>
-                <button
-                  onClick={() => setSelectedLog(null)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  ✕
-                </button>
+            <div className="relative bg-white rounded-lg shadow-xl max-w-5xl w-full p-6 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">Детали запроса</h3>
+                  <div className="text-xs text-gray-500 mt-1">ID: <span className="font-mono">{selectedLog.id}</span></div>
+                </div>
+                <button onClick={() => setSelectedLog(null)} className="text-gray-400 hover:text-gray-600">✕</button>
               </div>
 
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Дата</label>
-                    <div className="text-sm text-gray-900">{formatDate(selectedLog.createdAt)}</div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Статус</label>
-                    <div>
-                      <span
-                        className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                          selectedLog.success
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}
-                      >
-                        {selectedLog.success ? 'Успех' : 'Ошибка'}
-                      </span>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Клиент</label>
-                    <div className="text-sm text-gray-900">{selectedLog.clientApplicationName}</div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Нейросеть</label>
-                    <div className="text-sm text-gray-900">{selectedLog.neuralNetworkName}</div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">User ID</label>
-                    <div className="text-sm text-gray-900 font-mono">{selectedLog.externalUserId}</div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Токены</label>
-                    <div className="text-sm text-gray-900">{selectedLog.tokensUsed || '-'}</div>
-                  </div>
-                </div>
-
+              {/* Meta */}
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-500 block mb-2">Промпт</label>
-                  <div className="bg-gray-50 p-4 rounded border border-gray-200 max-h-48 overflow-y-auto">
-                    <pre className="text-sm text-gray-900 whitespace-pre-wrap">{selectedLog.prompt}</pre>
-                  </div>
+                  <div className="text-xs text-gray-500">Дата</div>
+                  <div className="text-sm text-gray-900">{formatDate(selectedLog.createdAt)}</div>
                 </div>
-
                 <div>
-                  <label className="text-sm font-medium text-gray-500 block mb-2">Ответ</label>
-                  <div className="bg-gray-50 p-4 rounded border border-gray-200 max-h-64 overflow-y-auto">
-                    <pre className="text-sm text-gray-900 whitespace-pre-wrap">{selectedLog.response}</pre>
-                  </div>
+                  <div className="text-xs text-gray-500">Статус</div>
+                  <span className={`px-2 py-1 text-xs font-semibold rounded-full ${selectedLog.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                    {selectedLog.success ? 'Успех' : 'Ошибка'}
+                  </span>
                 </div>
-
-                {selectedLog.errorMessage && (
-                  <div>
-                    <label className="text-sm font-medium text-red-500 block mb-2">Ошибка</label>
-                    <div className="bg-red-50 p-4 rounded border border-red-200">
-                      <pre className="text-sm text-red-700 whitespace-pre-wrap">{selectedLog.errorMessage}</pre>
-                    </div>
-                  </div>
-                )}
+                <div>
+                  <div className="text-xs text-gray-500">Клиент</div>
+                  <div className="text-sm text-gray-900">{selectedLog.clientApplicationName}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-gray-500">Нейросеть</div>
+                  <div className="text-sm text-gray-900">{selectedLog.neuralNetworkName}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-gray-500">User ID</div>
+                  <div className="text-sm text-gray-900 font-mono break-all">{selectedLog.externalUserId}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-gray-500">Токены</div>
+                  <div className="text-sm text-gray-900">{selectedLog.tokensUsed || '-'}</div>
+                </div>
               </div>
+
+              {/* Prompt */}
+              <div className="mb-4">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-gray-700">Промпт</label>
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => setShowPretty(!showPretty)} className="text-xs text-indigo-600 hover:underline">
+                      {showPretty ? 'Показать как есть' : 'Форматировать'}
+                    </button>
+                    <button onClick={() => copyToClipboard(selectedLog.prompt)} className="text-xs text-gray-600 hover:underline">
+                      Скопировать
+                    </button>
+                  </div>
+                </div>
+                <div className="bg-gray-50 p-4 rounded border border-gray-200 max-h-56 overflow-y-auto mt-2">
+                  <pre className="text-sm text-gray-900 whitespace-pre-wrap break-all">
+                    {showPretty ? tryPrettyJson(selectedLog.prompt) : (selectedLog.prompt || '')}
+                  </pre>
+                </div>
+              </div>
+
+              {/* Response */}
+              <div className="mb-4">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-gray-700">Ответ</label>
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => setShowPretty(!showPretty)} className="text-xs text-indigo-600 hover:underline">
+                      {showPretty ? 'Показать как есть' : 'Форматировать'}
+                    </button>
+                    <button onClick={() => copyToClipboard(selectedLog.response)} className="text-xs text-gray-600 hover:underline">
+                      Скопировать
+                    </button>
+                  </div>
+                </div>
+                <div className="bg-gray-50 p-4 rounded border border-gray-200 max-h-64 overflow-y-auto mt-2">
+                  <pre className="text-sm text-gray-900 whitespace-pre-wrap break-all">
+                    {showPretty ? tryPrettyJson(selectedLog.response) : (selectedLog.response || '')}
+                  </pre>
+                </div>
+              </div>
+
+              {selectedLog.errorMessage && (
+                <div className="mb-2">
+                  <label className="text-sm font-medium text-red-600 block mb-2">Ошибка</label>
+                  <div className="bg-red-50 p-4 rounded border border-red-200">
+                    <pre className="text-sm text-red-700 whitespace-pre-wrap">{selectedLog.errorMessage}</pre>
+                  </div>
+                </div>
+              )}
 
               <div className="mt-6 flex justify-end">
-                <button
-                  onClick={() => setSelectedLog(null)}
-                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
-                >
+                <button onClick={() => setSelectedLog(null)} className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
                   Закрыть
                 </button>
               </div>
