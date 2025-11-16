@@ -177,7 +177,7 @@ export const getLogs = async (
   if (filters?.success !== undefined) params.append('success', filters.success.toString());
 
   return fetchApi<{ content: RequestLog[]; totalElements: number; totalPages: number }>(
-    `/api/admin/logs?${params.toString()}`
+    `/api/admin/request-logs?${params.toString()}`
   );
 };
 
