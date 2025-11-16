@@ -187,3 +187,64 @@ export const getStats = async (): Promise<UsageStats> => {
   return fetchApi<UsageStats>('/api/admin/stats');
 };
 
+// ==================== USER AUTH & CABINET ====================
+
+export const userLogin = async (payload: { email: string; password: string }) => {
+  const res = await fetchApi<{ token: string; email: string }>('/api/user/auth/login', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+  localStorage.setItem('user_token', res.token);
+  return res;
+};
+
+export const userRegister = async (payload: { name: string; email: string; password: string }) => {
+  const res = await fetchApi<{ token: string; email: string }>('/api/user/auth/register', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+  localStorage.setItem('user_token', res.token);
+  return res;
+};
+
+export const userLogout = () => {
+  localStorage.removeItem('user_token');
+};
+
+export const oauthSignIn = async (provider: 'google' | 'yandex', token: string) => {
+  const res = await fetchApi<{ token: string; email: string }>(`/api/user/auth/oauth/${provider}`, {
+    method: 'POST',
+    body: JSON.stringify({ token }),
+  });
+  localStorage.setItem('user_token', res.token);
+  return res;
+};
+
+// все запросы кабинета отправляем с user_token
+async function userFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  const base = import.meta.env.VITE_API_URL || 'http://localhost:8091';
+  const token = localStorage.getItem('user_token');
+  const headers = new Headers(options.headers ?? undefined);
+  if (!headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
+  if (token) headers.set('Authorization', `Bearer ${token}`);
+  const resp = await fetch(`${base}${endpoint}`, { ...options, headers });
+  if (!resp.ok) {
+    const text = await resp.text();
+    throw new Error(text || `HTTP ${resp.status}`);
+  }
+  if (resp.status === 204) return {} as T;
+  return resp.json();
+}
+
+export const getMyClients = () => userFetch<any[]>('/api/user/clients');
+export const createMyClient = (payload: { name: string; description: string; isActive: boolean }) =>
+  userFetch<any>('/api/user/clients', { method: 'POST', body: JSON.stringify(payload) });
+export const updateMyClient = (id: string, payload: { name: string; description: string; isActive: boolean }) =>
+  userFetch<any>(`/api/user/clients/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
+export const deleteMyClient = (id: string) => userFetch<void>(`/api/user/clients/${id}`, { method: 'DELETE' });
+export const regenerateMyApiKey = (id: string) => userFetch<any>(`/api/user/clients/${id}/regenerate-key`, { method: 'POST' });
+
+export const getAvailableNetworks = () => userFetch<any[]>('/api/user/networks/available');
+export const setClientNetworks = (clientId: string, networkIds: string[]) =>
+  userFetch<void>(`/api/user/clients/${clientId}/networks`, { method: 'PUT', body: JSON.stringify({ networkIds }) });
+
