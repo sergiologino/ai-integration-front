@@ -86,12 +86,14 @@ export const MyServices: React.FC<Props> = ({ onLogout }) => {
 
   const openNetworks = async (client: any) => {
     setNetworksModal(client);
-    setSelectedNetworkIds(client.networkIds || []);
+    // Преобразуем UUID в строки для сравнения
+    const networkIds = (client.networkIds || []).map((id: any) => String(id));
+    setSelectedNetworkIds(networkIds);
     try {
       const nets = await getAvailableNetworks();
       // нормализуем данные (бэк отдаёт AvailableNetworkDto: id, code, label, provider, networkType, connectionInstruction)
       const normalized = nets.map((n: any) => ({
-        id: n.id || n.code,
+        id: String(n.id || n.code), // Преобразуем в строку для сравнения
         code: n.code || n.id,
         displayName: n.label || n.displayName || n.code,
         provider: n.provider || '',
@@ -127,7 +129,7 @@ export const MyServices: React.FC<Props> = ({ onLogout }) => {
     try {
       await setClientNetworks(networksModal.id, selectedNetworkIds);
       setNetworksModal(null);
-      load();
+      load(); // Перезагружаем список клиентов, чтобы обновить networkIds
     } catch (e: any) {
       alert(e.message || 'Ошибка сохранения сетей');
     }
