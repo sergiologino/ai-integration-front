@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { getMyClients, createMyClient, updateMyClient, deleteMyClient, regenerateMyApiKey, getAvailableNetworks, setClientNetworks, getNetworkStats, userLogout } from '../api';
+import { NetworkInstructionModal } from './NetworkInstructionModal';
 
 interface Props {
   onLogout: () => void;
@@ -21,6 +22,7 @@ export const MyServices: React.FC<Props> = ({ onLogout }) => {
   const [statsModal, setStatsModal] = useState<any | null>(null);
   const [networkStats, setNetworkStats] = useState<any[]>([]);
   const [loadingStats, setLoadingStats] = useState(false);
+  const [instructionModal, setInstructionModal] = useState<{ network: any; apiKey: string } | null>(null);
 
   const load = async () => {
     setLoading(true); setError('');
@@ -118,6 +120,23 @@ export const MyServices: React.FC<Props> = ({ onLogout }) => {
     } finally {
       setLoadingStats(false);
     }
+  };
+
+  const openInstruction = (network: any) => {
+    if (!networksModal) return;
+    setInstructionModal({
+      network: {
+        ...network,
+        id: network.id,
+        code: network.code, // code (name) нейросети
+        displayName: network.displayName,
+        provider: network.provider,
+        networkType: network.networkType,
+        connectionInstruction: network.connectionInstruction,
+        apiBaseUrl: import.meta.env.VITE_API_URL || 'http://localhost:8091'
+      },
+      apiKey: networksModal.apiKey
+    });
   };
 
   const toggleNetwork = (id: string) => {
@@ -237,20 +256,25 @@ export const MyServices: React.FC<Props> = ({ onLogout }) => {
               <div className="max-h-[60vh] overflow-y-auto space-y-2">
                 {availableNetworks.map(n => (
                   <div key={n.id} className="border rounded p-3">
-                    <label className="flex items-center gap-3 cursor-pointer">
-                      <input type="checkbox" checked={selectedNetworkIds.includes(n.id)} onChange={() => toggleNetwork(n.id)} />
+                    <div className="flex items-start gap-3">
+                      <input
+                        type="checkbox"
+                        checked={selectedNetworkIds.includes(n.id)}
+                        onChange={() => toggleNetwork(n.id)}
+                        className="mt-1"
+                      />
                       <div className="flex-1">
                         <div className="font-medium">{n.displayName}</div>
                         <div className="text-xs text-gray-500">{n.provider} • {n.networkType}</div>
-                        {n.connectionInstruction && (
-                          <details className="mt-2">
-                            <summary className="text-xs text-indigo-600 cursor-pointer hover:text-indigo-800">Инструкция по подключению</summary>
-                            <div className="mt-2 p-3 bg-gray-50 rounded text-xs text-gray-700 whitespace-pre-wrap">{n.connectionInstruction}</div>
-                          </details>
-                        )}
+                        <button
+                          onClick={() => openInstruction(n)}
+                          className="mt-2 text-xs text-indigo-600 hover:text-indigo-800 underline"
+                        >
+                          📖 Показать инструкцию по подключению
+                        </button>
                       </div>
                       <span className="text-green-600 text-xs">Активна</span>
-                    </label>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -315,6 +339,23 @@ export const MyServices: React.FC<Props> = ({ onLogout }) => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Модалка инструкции по подключению */}
+      {instructionModal && (
+        <NetworkInstructionModal
+          network={{
+            id: instructionModal.network.id,
+            code: instructionModal.network.code,
+            displayName: instructionModal.network.displayName,
+            provider: instructionModal.network.provider,
+            networkType: instructionModal.network.networkType,
+            connectionInstruction: instructionModal.network.connectionInstruction,
+            apiKey: instructionModal.apiKey,
+            apiBaseUrl: instructionModal.network.apiBaseUrl
+          }}
+          onClose={() => setInstructionModal(null)}
+        />
       )}
     </div>
   );
