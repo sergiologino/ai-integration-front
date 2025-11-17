@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { userLogin, userRegister, oauthAuthorizeUrl, API_BASE } from '../api';
-import { useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { userLogin, userRegister, oauthAuthorizeUrl } from '../api';
 
 interface Props {
   onLoginSuccess: () => void;
@@ -12,6 +12,12 @@ export const UserAuth: React.FC<Props> = ({ onLoginSuccess }) => {
   const [password, setPassword] = useState('');
   const [repeatPassword, setRepeatPassword] = useState('');
   const [name, setName] = useState('');
+  const navigate = useNavigate();
+
+  const completeLogin = useCallback(() => {
+    onLoginSuccess();
+    navigate('/app', { replace: true });
+  }, [navigate, onLoginSuccess]);
   // Обработка возврата из OAuth: ?ok=1&provider=...&token=...
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -19,9 +25,9 @@ export const UserAuth: React.FC<Props> = ({ onLoginSuccess }) => {
     const token = params.get('token');
     if (ok === '1' && token) {
       localStorage.setItem('user_token', token);
-      onLoginSuccess();
+      completeLogin();
     }
-  }, [onLoginSuccess]);
+  }, [completeLogin]);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -31,7 +37,7 @@ export const UserAuth: React.FC<Props> = ({ onLoginSuccess }) => {
     setError(''); setLoading(true);
     try {
       await userLogin({ email, password });
-      onLoginSuccess();
+      completeLogin();
     } catch (err: any) {
       setError(err.message || 'Ошибка входа');
     } finally {
@@ -46,7 +52,7 @@ export const UserAuth: React.FC<Props> = ({ onLoginSuccess }) => {
       if (!name.trim()) throw new Error('Укажите имя');
       if (password !== repeatPassword) throw new Error('Пароли не совпадают');
       await userRegister({ fullName: name, email, password, repeatPassword });
-      onLoginSuccess();
+      completeLogin();
     } catch (err: any) {
       setError(err.message || 'Ошибка регистрации');
     } finally {
