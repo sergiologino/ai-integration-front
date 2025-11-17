@@ -241,3 +241,5 @@ export const getAvailableNetworks = () => userFetch<any[]>('/api/user/networks/a
 export const setClientNetworks = (clientId: string, networkIds: string[]) =>
   userFetch<void>(`/api/user/clients/${clientId}/networks`, { method: 'PUT', body: JSON.stringify({ networkIds }) });
 
+export const getNetworkStats = (clientId: string) => userFetch<any[]>(`/api/user/clients/${clientId}/networks/stats`);
+
