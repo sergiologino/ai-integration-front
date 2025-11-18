@@ -296,6 +296,36 @@ export const Paywall: React.FC<PaywallProps> = ({ isOpen, onClose, onSubscriptio
               )}
             </div>
 
+            {/* Информация о текущей подписке */}
+            {currentPlan && (
+              <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <h4 className="font-semibold text-gray-900 mb-2">Текущая подписка</h4>
+                <div className="space-y-1 text-sm text-gray-700">
+                  <div>
+                    <strong>План:</strong> {currentPlan.plan?.displayName || currentPlan.plan?.name}
+                  </div>
+                  {currentPlan.expiresAt && (
+                    <div>
+                      <strong>Действует до:</strong> {new Date(currentPlan.expiresAt).toLocaleDateString('ru-RU', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                    </div>
+                  )}
+                  {currentPlan.nextPaymentDate && (
+                    <div className="text-blue-600 font-medium">
+                      <strong>Следующая оплата:</strong> {new Date(currentPlan.nextPaymentDate).toLocaleDateString('ru-RU', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {error && (
               <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg text-center">
                 <p className="text-red-600">{error}</p>

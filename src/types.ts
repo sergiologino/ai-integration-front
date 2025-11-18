@@ -57,6 +57,8 @@ export interface ClientApplication {
   description: string;
   apiKey: string;
   isActive: boolean;
+  totalTokensRemaining?: number;
+  estimatedDaysRemaining?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -136,6 +138,47 @@ export interface ClientNetworkAccess {
   monthlyRequestLimit?: number;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface UserAccessGroup {
+  userId: string | null;
+  userEmail: string;
+  userFullName: string;
+  services: ClientServiceGroup[];
+}
+
+export interface ClientServiceGroup {
+  clientId: string;
+  clientName: string;
+  clientDescription: string;
+  isAdminService: boolean;
+  networks: NetworkAccessInfo[];
+}
+
+export interface NetworkAccessInfo {
+  accessId: string;
+  networkId: string;
+  networkDisplayName: string;
+  networkProvider: string;
+  networkType: string;
+  dailyRequestLimit?: number;
+  monthlyRequestLimit?: number;
+  priority?: number;
+}
+
+export interface PaymentStats {
+  paymentId: string;
+  userId: string;
+  userEmail: string;
+  userFullName: string;
+  planName: string;
+  planDisplayName: string;
+  amount: number;
+  currency: string;
+  status: string;
+  createdAt: string;
+  completedAt?: string;
+  transactionId?: string;
 }
 
 export interface AccessStats {

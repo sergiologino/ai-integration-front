@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getMyClients, createMyClient, updateMyClient, deleteMyClient, regenerateMyApiKey, getAvailableNetworks, setClientNetworks, getNetworkStats, userLogout } from '../api';
+import { getMyClients, createMyClient, updateMyClient, deleteMyClient, regenerateMyApiKey, getAvailableNetworks, setClientNetworks, getNetworkStats, userLogout, getCurrentSubscription } from '../api';
 import { NetworkInstructionModal } from './NetworkInstructionModal';
 import { Paywall } from './Paywall';
 import { UserNetworkManager } from './UserNetworkManager';
@@ -28,12 +28,17 @@ export const MyServices: React.FC<Props> = ({ onLogout }) => {
   const [instructionModal, setInstructionModal] = useState<{ network: any; apiKey: string } | null>(null);
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'services' | 'networks' | 'api-keys'>('services');
+  const [currentSubscription, setCurrentSubscription] = useState<any | null>(null);
 
   const load = async () => {
     setLoading(true); setError('');
     try {
-      const data = await getMyClients();
+      const [data, subscription] = await Promise.all([
+        getMyClients(),
+        getCurrentSubscription().catch(() => null)
+      ]);
       setClients(data);
+      setCurrentSubscription(subscription);
     } catch (e: any) {
       setError(e.message || 'Ошибка загрузки');
     } finally {
@@ -171,12 +176,27 @@ export const MyServices: React.FC<Props> = ({ onLogout }) => {
   return (
     <div className="min-h-screen bg-gray-100">
       <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">Мои сервисы</h1>
-          <div className="flex gap-2">
-            <button onClick={() => setPaywallOpen(true)} className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">Подписка</button>
-            <button onClick={doLogout} className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-800">Выйти</button>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex justify-between items-center">
+            <h1 className="text-2xl font-bold text-gray-900">Мои сервисы</h1>
+            <div className="flex gap-2">
+              <button onClick={() => setPaywallOpen(true)} className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">Подписка</button>
+              <button onClick={doLogout} className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-800">Выйти</button>
+            </div>
           </div>
+          {/* Плановая дата следующей оплаты */}
+          {currentSubscription?.nextPaymentDate && (
+            <div className="mt-3 text-sm text-gray-600">
+              <span className="font-medium">Следующая оплата:</span>{' '}
+              <span className="text-indigo-600 font-semibold">
+                {new Date(currentSubscription.nextPaymentDate).toLocaleDateString('ru-RU', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}
+              </span>
+            </div>
+          )}
         </div>
       </header>
 
@@ -244,6 +264,29 @@ export const MyServices: React.FC<Props> = ({ onLogout }) => {
                     </span>
                   </div>
                   <p className="text-sm text-gray-600 mt-1">{c.description}</p>
+                  
+                  {/* Остаток токенов и дни использования */}
+                  {(c.totalTokensRemaining !== undefined || c.estimatedDaysRemaining !== undefined) && (
+                    <div className="mt-4 grid grid-cols-2 gap-4">
+                      {c.totalTokensRemaining !== undefined && (
+                        <div className="bg-blue-50 rounded-lg p-3">
+                          <div className="text-xs font-medium text-gray-500">Остаток токенов</div>
+                          <div className="text-lg font-bold text-blue-600 mt-1">
+                            {c.totalTokensRemaining.toLocaleString('ru-RU')}
+                          </div>
+                        </div>
+                      )}
+                      {c.estimatedDaysRemaining !== undefined && c.estimatedDaysRemaining !== null && (
+                        <div className="bg-green-50 rounded-lg p-3">
+                          <div className="text-xs font-medium text-gray-500">Дней использования</div>
+                          <div className="text-lg font-bold text-green-600 mt-1">
+                            ~{c.estimatedDaysRemaining} {c.estimatedDaysRemaining === 1 ? 'день' : c.estimatedDaysRemaining < 5 ? 'дня' : 'дней'}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
                   <div className="mt-4 text-xs text-gray-500">
                     <div>ID: {c.id}</div>
                   </div>

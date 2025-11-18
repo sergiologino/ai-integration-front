@@ -9,6 +9,8 @@ import type {
   ClientCreateRequest,
   RequestLog,
   UsageStats,
+  UserAccessGroup,
+  PaymentStats,
 } from './types';
 
 export const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8091';
@@ -185,6 +187,18 @@ export const getLogs = async (
 
 export const getStats = async (): Promise<UsageStats> => {
   return fetchApi<UsageStats>('/api/admin/stats');
+};
+
+// ==================== ACCESS MANAGEMENT ====================
+
+export const getGroupedAccesses = async (): Promise<UserAccessGroup[]> => {
+  return fetchApi<UserAccessGroup[]>('/api/admin/access/grouped');
+};
+
+// ==================== PAYMENT STATS ====================
+
+export const getPaymentStats = async (): Promise<PaymentStats[]> => {
+  return fetchApi<PaymentStats[]>('/api/admin/payments/stats');
 };
 
 // ==================== USER AUTH & CABINET ====================

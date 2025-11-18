@@ -6,8 +6,9 @@ import { NetworkAccessManager } from './NetworkAccessManager';
 import { NetworkAccessTests } from './NetworkAccessTests';
 import { LogsViewer } from './LogsViewer';
 import { StatsPanel } from './StatsPanel';
+import { PaymentStatsPanel } from './PaymentStatsPanel';
 
-type Tab = 'stats' | 'networks' | 'clients' | 'access' | 'tests' | 'logs';
+type Tab = 'stats' | 'networks' | 'clients' | 'access' | 'tests' | 'logs' | 'payments';
 
 interface DashboardProps {
   onLogout: () => void;
@@ -26,6 +27,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
     { id: 'networks' as Tab, label: '🧠 Нейросети', icon: '🧠' },
     { id: 'clients' as Tab, label: '🔑 Клиенты', icon: '🔑' },
     { id: 'access' as Tab, label: '🔗 Доступы', icon: '🔗' },
+    { id: 'payments' as Tab, label: '💳 Оплаты', icon: '💳' },
     { id: 'tests' as Tab, label: '🧪 Тесты', icon: '🧪' },
     { id: 'logs' as Tab, label: '📋 Логи', icon: '📋' },
   ];
@@ -72,6 +74,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
         {activeTab === 'networks' && <NetworksManager />}
         {activeTab === 'clients' && <ClientsManager />}
         {activeTab === 'access' && <NetworkAccessManager />}
+        {activeTab === 'payments' && <PaymentStatsPanel />}
         {activeTab === 'tests' && <NetworkAccessTests />}
         {activeTab === 'logs' && <LogsViewer />}
       </main>

@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { getClients, getNetworks, fetchApi } from '../api';
+import { getClients, getNetworks, fetchApi, getGroupedAccesses } from '../api';
 import type {
   ClientApplication,
   NeuralNetwork,
   ClientNetworkAccess,
   AccessStats,
   GrantAccessRequest,
+  UserAccessGroup,
 } from '../types';
 
 export const NetworkAccessManager: React.FC = () => {
   const [accesses, setAccesses] = useState<ClientNetworkAccess[]>([]);
+  const [groupedAccesses, setGroupedAccesses] = useState<UserAccessGroup[]>([]);
   const [clients, setClients] = useState<ClientApplication[]>([]);
   const [networks, setNetworks] = useState<NeuralNetwork[]>([]);
   const [stats, setStats] = useState<AccessStats | null>(null);
@@ -17,6 +19,7 @@ export const NetworkAccessManager: React.FC = () => {
   const [error, setError] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [editingAccess, setEditingAccess] = useState<ClientNetworkAccess | null>(null);
+  const [viewMode, setViewMode] = useState<'flat' | 'grouped'>('grouped');
 
   const [formData, setFormData] = useState<GrantAccessRequest>({
     clientId: '',
@@ -33,14 +36,16 @@ export const NetworkAccessManager: React.FC = () => {
     setLoading(true);
     setError('');
     try {
-      const [accessesData, clientsData, networksData, statsData] = await Promise.all([
+      const [accessesData, groupedData, clientsData, networksData, statsData] = await Promise.all([
         fetchAccesses(),
+        getGroupedAccesses(),
         getClients(),
         getNetworks(),
         fetchStats(),
       ]);
 
       setAccesses(accessesData);
+      setGroupedAccesses(groupedData);
       setClients(clientsData);
       setNetworks(networksData);
       setStats(statsData);
@@ -139,12 +144,36 @@ export const NetworkAccessManager: React.FC = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-900">Управление доступом клиентов к нейросетям</h2>
-        <button
-          onClick={handleCreate}
-          className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-        >
-          + Предоставить доступ
-        </button>
+        <div className="flex items-center space-x-3">
+          <div className="flex bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => setViewMode('grouped')}
+              className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                viewMode === 'grouped'
+                  ? 'bg-white text-indigo-600 shadow'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Группировка
+            </button>
+            <button
+              onClick={() => setViewMode('flat')}
+              className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                viewMode === 'flat'
+                  ? 'bg-white text-indigo-600 shadow'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Список
+            </button>
+          </div>
+          <button
+            onClick={handleCreate}
+            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            + Предоставить доступ
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -209,49 +238,124 @@ export const NetworkAccessManager: React.FC = () => {
         </div>
       )}
 
-      <div className="grid gap-4">
-        {accesses.map((access) => (
-          <div key={access.id} className="bg-white rounded-lg shadow p-6">
-            <div className="flex justify-between items-start">
-              <div className="flex-1">
-                <div className="flex items-center space-x-3">
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    {access.clientName} → {access.networkDisplayName}
-                  </h3>
-                  <span className="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">{access.networkProvider}</span>
-                  <span className="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">{access.networkType}</span>
-                </div>
-
-                <div className="mt-2 text-sm text-gray-600">
-                  <p>
-                    <strong>Лимиты:</strong> {getLimitsDescription(access)}
-                  </p>
-                  <p>
-                    <strong>Создан:</strong> {new Date(access.createdAt).toLocaleString('ru-RU')}
-                  </p>
-                  <p>
-                    <strong>Обновлен:</strong> {new Date(access.updatedAt).toLocaleString('ru-RU')}
-                  </p>
-                </div>
+      {viewMode === 'grouped' ? (
+        <div className="space-y-6">
+          {groupedAccesses.map((userGroup) => (
+            <div key={userGroup.userId || 'admin'} className="bg-white rounded-lg shadow">
+              <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  {userGroup.userFullName} {userGroup.userId === null && '⭐'}
+                </h3>
+                <p className="text-sm text-gray-600">{userGroup.userEmail}</p>
               </div>
-
-              <div className="flex flex-col space-y-2 ml-4">
-                <button
-                  onClick={() => handleEdit(access)}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-sm transition-colors"
-                >
-                  Редактировать
-                </button>
-                <button onClick={() => handleRevokeAccess(access.id)} className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm transition-colors">
-                  Отозвать
-                </button>
+              <div className="p-6 space-y-4">
+                {userGroup.services.map((service) => (
+                  <div key={service.clientId} className="border border-gray-200 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-md font-medium text-gray-900">
+                        {service.clientName} {service.isAdminService && '⭐'}
+                      </h4>
+                      {service.clientDescription && (
+                        <p className="text-sm text-gray-500">{service.clientDescription}</p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      {service.networks.map((network) => (
+                        <div key={network.accessId} className="flex items-center justify-between bg-gray-50 rounded p-3">
+                          <div className="flex items-center space-x-3 flex-1">
+                            <span className="font-medium text-gray-900">{network.networkDisplayName}</span>
+                            <span className="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                              {network.networkProvider}
+                            </span>
+                            <span className="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                              {network.networkType}
+                            </span>
+                            <span className="text-sm text-gray-600">
+                              {network.dailyRequestLimit || network.monthlyRequestLimit
+                                ? `Лимиты: ${network.dailyRequestLimit ? `${network.dailyRequestLimit} дн.` : ''} ${network.monthlyRequestLimit ? `${network.monthlyRequestLimit} мес.` : ''}`
+                                : 'Неограниченно'}
+                            </span>
+                          </div>
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => {
+                                const access = accesses.find(a => a.id === network.accessId);
+                                if (access) handleEdit(access);
+                              }}
+                              className="px-3 py-1 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700"
+                            >
+                              Редактировать
+                            </button>
+                            <button
+                              onClick={() => handleRevokeAccess(network.accessId)}
+                              className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700"
+                            >
+                              Отозвать
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid gap-4">
+          {accesses.map((access) => (
+            <div key={access.id} className="bg-white rounded-lg shadow p-6">
+              <div className="flex justify-between items-start">
+                <div className="flex-1">
+                  <div className="flex items-center space-x-3">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      {access.clientName} → {access.networkDisplayName}
+                    </h3>
+                    <span className="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">{access.networkProvider}</span>
+                    <span className="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">{access.networkType}</span>
+                  </div>
 
-      {accesses.length === 0 && (
+                  <div className="mt-2 text-sm text-gray-600">
+                    <p>
+                      <strong>Лимиты:</strong> {getLimitsDescription(access)}
+                    </p>
+                    <p>
+                      <strong>Создан:</strong> {new Date(access.createdAt).toLocaleString('ru-RU')}
+                    </p>
+                    <p>
+                      <strong>Обновлен:</strong> {new Date(access.updatedAt).toLocaleString('ru-RU')}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-col space-y-2 ml-4">
+                  <button
+                    onClick={() => handleEdit(access)}
+                    className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-sm transition-colors"
+                  >
+                    Редактировать
+                  </button>
+                  <button onClick={() => handleRevokeAccess(access.id)} className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm transition-colors">
+                    Отозвать
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {viewMode === 'grouped' && groupedAccesses.length === 0 && (
+        <div className="text-center py-12">
+          <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <h3 className="mt-2 text-sm font-medium text-gray-900">Нет доступов</h3>
+          <p className="mt-1 text-sm text-gray-500">Начните с предоставления доступа клиенту к нейросети.</p>
+        </div>
+      )}
+      {viewMode === 'flat' && accesses.length === 0 && (
         <div className="text-center py-12">
           <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
