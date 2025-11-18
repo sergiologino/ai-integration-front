@@ -253,6 +253,8 @@ export const MyServices: React.FC<Props> = ({ onLogout }) => {
             </div>
           ))}
         </div>
+          </>
+        )}
       </main>
 
       {/* Модалка сервиса */}
@@ -379,9 +381,6 @@ export const MyServices: React.FC<Props> = ({ onLogout }) => {
           </div>
         </div>
       )}
-          </>
-        )}
-      </main>
 
       {/* Модалка инструкции по подключению */}
       {instructionModal && (
