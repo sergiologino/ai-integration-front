@@ -3,6 +3,7 @@ import { getMyClients, createMyClient, updateMyClient, deleteMyClient, regenerat
 import { NetworkInstructionModal } from './NetworkInstructionModal';
 import { Paywall } from './Paywall';
 import { UserNetworkManager } from './UserNetworkManager';
+import { UserApiKeysManager } from './UserApiKeysManager';
 
 interface Props {
   onLogout: () => void;
@@ -26,7 +27,7 @@ export const MyServices: React.FC<Props> = ({ onLogout }) => {
   const [loadingStats, setLoadingStats] = useState(false);
   const [instructionModal, setInstructionModal] = useState<{ network: any; apiKey: string } | null>(null);
   const [paywallOpen, setPaywallOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'services' | 'networks'>('services');
+  const [activeTab, setActiveTab] = useState<'services' | 'networks' | 'api-keys'>('services');
 
   const load = async () => {
     setLoading(true); setError('');
@@ -203,6 +204,16 @@ export const MyServices: React.FC<Props> = ({ onLogout }) => {
             >
               🧠 Управление нейросетями
             </button>
+            <button
+              onClick={() => setActiveTab('api-keys')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === 'api-keys'
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              🔑 Мои API ключи
+            </button>
           </div>
         </div>
       </nav>
@@ -210,6 +221,8 @@ export const MyServices: React.FC<Props> = ({ onLogout }) => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         {activeTab === 'networks' ? (
           <UserNetworkManager onBack={() => setActiveTab('services')} />
+        ) : activeTab === 'api-keys' ? (
+          <UserApiKeysManager onBack={() => setActiveTab('services')} />
         ) : (
           <>
         <div className="flex justify-between items-center">

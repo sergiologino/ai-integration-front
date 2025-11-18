@@ -256,3 +256,13 @@ export const cancelSubscription = (reason?: string) =>
 export const getPaymentHistory = () => userFetch<any[]>('/api/user/subscriptions/payments/history');
 export const getPaymentStatus = (transactionId: string) => userFetch<any>(`/api/user/subscriptions/payment/${transactionId}/status`);
 
+// ==================== USER API KEYS ====================
+
+export const saveUserApiKey = (payload: { clientId: string; networkId: string; apiKey: string }) =>
+  userFetch<any>('/api/user/api-keys', { method: 'POST', body: JSON.stringify(payload) });
+export const getUserApiKeys = (clientId: string) => userFetch<any[]>(`/api/user/api-keys/client/${clientId}`);
+export const getAllUserApiKeys = () => userFetch<any[]>('/api/user/api-keys');
+export const deleteUserApiKey = (clientId: string, networkId: string) =>
+  userFetch<void>(`/api/user/api-keys/client/${clientId}/network/${networkId}`, { method: 'DELETE' });
+export const checkUserApiKeyAccess = () => userFetch<{ hasAccess: boolean }>('/api/user/api-keys/check-access');
+
