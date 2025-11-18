@@ -25,6 +25,9 @@ export const NetworksManager: React.FC = () => {
     maxRetries: 3,
     requestMapping: {},
     responseMapping: {},
+    costPerTokenRub: undefined,
+    wordsPerToken: undefined,
+    secondsPerToken: undefined,
   });
 
   useEffect(() => {
@@ -61,6 +64,9 @@ export const NetworksManager: React.FC = () => {
       maxRetries: 3,
       requestMapping: {},
       responseMapping: {},
+      costPerTokenRub: undefined,
+      wordsPerToken: undefined,
+      secondsPerToken: undefined,
     });
     setIsModalOpen(true);
   };
@@ -82,6 +88,9 @@ export const NetworksManager: React.FC = () => {
       maxRetries: network.maxRetries,
       requestMapping: {},
       responseMapping: {},
+      costPerTokenRub: (network as any).costPerTokenRub,
+      wordsPerToken: (network as any).wordsPerToken,
+      secondsPerToken: (network as any).secondsPerToken,
     });
     setIsModalOpen(true);
   };
@@ -596,6 +605,59 @@ export const NetworksManager: React.FC = () => {
                       />
                       <span className="ml-2 text-sm text-gray-700">Бесплатная</span>
                     </label>
+                  </div>
+
+                  {/* Себестоимость и метрики */}
+                  <div className="col-span-2 border-t pt-4 mt-2">
+                    <h4 className="text-sm font-semibold text-gray-700 mb-3">
+                      💰 Себестоимость и метрики (курс: 1 USD = 90 RUB)
+                    </h4>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Себестоимость токена (₽)
+                          <span className="text-xs text-gray-500 ml-1">(например: 0.000045)</span>
+                        </label>
+                        <input
+                          type="number"
+                          step="0.00000001"
+                          value={formData.costPerTokenRub || ''}
+                          onChange={(e) => setFormData({ ...formData, costPerTokenRub: e.target.value ? parseFloat(e.target.value) : undefined })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                          placeholder="0.000045"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Слов в токене
+                          <span className="text-xs text-gray-500 ml-1">(для текстовых)</span>
+                        </label>
+                        <input
+                          type="number"
+                          step="0.0001"
+                          value={formData.wordsPerToken || ''}
+                          onChange={(e) => setFormData({ ...formData, wordsPerToken: e.target.value ? parseFloat(e.target.value) : undefined })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                          placeholder="0.75"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Секунд в токене
+                          <span className="text-xs text-gray-500 ml-1">(для транскрибации)</span>
+                        </label>
+                        <input
+                          type="number"
+                          step="0.0001"
+                          value={formData.secondsPerToken || ''}
+                          onChange={(e) => setFormData({ ...formData, secondsPerToken: e.target.value ? parseFloat(e.target.value) : undefined })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                          placeholder="0.1"
+                        />
+                      </div>
+                    </div>
                   </div>
 
                   {/* Примеры запроса и ответа */}

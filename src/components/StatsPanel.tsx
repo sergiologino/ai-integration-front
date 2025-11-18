@@ -83,16 +83,65 @@ export const StatsPanel: React.FC = () => {
         </div>
       </div>
 
-      {/* Токены */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="text-sm font-medium text-gray-500 mb-2">Использовано токенов</div>
-        <div className="text-3xl font-bold text-gray-900">
-          {stats.totalTokensUsed.toLocaleString()}
+      {/* Токены и стоимость */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="text-sm font-medium text-gray-500 mb-2">Использовано токенов</div>
+          <div className="text-3xl font-bold text-gray-900">
+            {stats.totalTokensUsed?.toLocaleString() || 0}
+          </div>
+        </div>
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="text-sm font-medium text-gray-500 mb-2">Общая стоимость</div>
+          <div className="text-3xl font-bold text-indigo-600">
+            {stats.totalCostRub ? `${parseFloat(stats.totalCostRub).toFixed(2)} ₽` : '0.00 ₽'}
+          </div>
         </div>
       </div>
 
-      {/* Запросы по нейросетям */}
-      {Object.keys(stats.requestsByNetwork).length > 0 && (
+      {/* Детальная статистика по нейросетям */}
+      {stats.networkDetails && stats.networkDetails.length > 0 && (
+        <div className="bg-white rounded-lg shadow p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Статистика по нейросетям</h3>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Нейросеть</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Запросы</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Успешных</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ошибок</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Токенов</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Стоимость</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">₽/токен</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {stats.networkDetails
+                  .sort((a, b) => (b.totalRequests || 0) - (a.totalRequests || 0))
+                  .map((network: any) => (
+                    <tr key={network.networkId}>
+                      <td className="px-4 py-3 text-sm font-medium text-gray-900">{network.networkDisplayName}</td>
+                      <td className="px-4 py-3 text-sm text-gray-700">{network.totalRequests || 0}</td>
+                      <td className="px-4 py-3 text-sm text-green-600">{network.successfulRequests || 0}</td>
+                      <td className="px-4 py-3 text-sm text-red-600">{network.failedRequests || 0}</td>
+                      <td className="px-4 py-3 text-sm text-gray-700">{(network.totalTokensUsed || 0).toLocaleString()}</td>
+                      <td className="px-4 py-3 text-sm font-semibold text-indigo-600">
+                        {network.totalCostRub ? `${parseFloat(network.totalCostRub).toFixed(2)} ₽` : '0.00 ₽'}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-500">
+                        {network.costPerTokenRub ? `${parseFloat(network.costPerTokenRub).toFixed(8)} ₽` : '-'}
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Запросы по нейросетям (краткая версия) */}
+      {Object.keys(stats.requestsByNetwork || {}).length > 0 && !stats.networkDetails && (
         <div className="bg-white rounded-lg shadow p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Запросы по нейросетям</h3>
           <div className="space-y-3">
@@ -111,8 +160,45 @@ export const StatsPanel: React.FC = () => {
         </div>
       )}
 
-      {/* Запросы по клиентам */}
-      {Object.keys(stats.requestsByClient).length > 0 && (
+      {/* Детальная статистика по клиентам */}
+      {stats.clientDetails && stats.clientDetails.length > 0 && (
+        <div className="bg-white rounded-lg shadow p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Статистика по клиентам</h3>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Клиент</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Запросы</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Успешных</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ошибок</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Токенов</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Стоимость</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {stats.clientDetails
+                  .sort((a, b) => (b.totalRequests || 0) - (a.totalRequests || 0))
+                  .map((client: any) => (
+                    <tr key={client.clientId}>
+                      <td className="px-4 py-3 text-sm font-medium text-gray-900">{client.clientName}</td>
+                      <td className="px-4 py-3 text-sm text-gray-700">{client.totalRequests || 0}</td>
+                      <td className="px-4 py-3 text-sm text-green-600">{client.successfulRequests || 0}</td>
+                      <td className="px-4 py-3 text-sm text-red-600">{client.failedRequests || 0}</td>
+                      <td className="px-4 py-3 text-sm text-gray-700">{(client.totalTokensUsed || 0).toLocaleString()}</td>
+                      <td className="px-4 py-3 text-sm font-semibold text-indigo-600">
+                        {client.totalCostRub ? `${parseFloat(client.totalCostRub).toFixed(2)} ₽` : '0.00 ₽'}
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Запросы по клиентам (краткая версия) */}
+      {Object.keys(stats.requestsByClient || {}).length > 0 && !stats.clientDetails && (
         <div className="bg-white rounded-lg shadow p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Запросы по клиентам</h3>
           <div className="space-y-3">

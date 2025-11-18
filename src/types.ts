@@ -24,6 +24,9 @@ export interface NeuralNetwork {
   priority: number;
   timeoutSeconds: number;
   maxRetries: number;
+  costPerTokenRub?: number;
+  wordsPerToken?: number;
+  secondsPerToken?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -43,6 +46,9 @@ export interface NetworkCreateRequest {
   maxRetries: number;
   requestMapping: Record<string, any>;
   responseMapping: Record<string, any>;
+  costPerTokenRub?: number;
+  wordsPerToken?: number;
+  secondsPerToken?: number;
 }
 
 export interface ClientApplication {
@@ -82,8 +88,40 @@ export interface UsageStats {
   successfulRequests: number;
   failedRequests: number;
   totalTokensUsed: number;
+  totalCostRub?: string | number;
   requestsByNetwork: Record<string, number>;
   requestsByClient: Record<string, number>;
+  tokensByNetwork?: Record<string, number>;
+  costByNetwork?: Record<string, string | number>;
+  tokensByClient?: Record<string, number>;
+  costByClient?: Record<string, string | number>;
+  networkDetails?: Array<{
+    networkId: string;
+    networkName: string;
+    networkDisplayName: string;
+    provider: string;
+    totalRequests: number;
+    successfulRequests: number;
+    failedRequests: number;
+    totalTokensUsed: number;
+    totalCostRub?: string | number;
+    costPerTokenRub?: string | number;
+    requestsByClient?: Record<string, number>;
+    tokensByClient?: Record<string, number>;
+    costByClient?: Record<string, string | number>;
+  }>;
+  clientDetails?: Array<{
+    clientId: string;
+    clientName: string;
+    totalRequests: number;
+    successfulRequests: number;
+    failedRequests: number;
+    totalTokensUsed: number;
+    totalCostRub?: string | number;
+    requestsByNetwork?: Record<string, number>;
+    tokensByNetwork?: Record<string, number>;
+    costByNetwork?: Record<string, string | number>;
+  }>;
 }
 
 export interface ClientNetworkAccess {
