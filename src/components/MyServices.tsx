@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { getMyClients, createMyClient, updateMyClient, deleteMyClient, regenerateMyApiKey, getAvailableNetworks, setClientNetworks, getNetworkStats, userLogout } from '../api';
 import { NetworkInstructionModal } from './NetworkInstructionModal';
 import { Paywall } from './Paywall';
+import { UserNetworkManager } from './UserNetworkManager';
 
 interface Props {
   onLogout: () => void;
@@ -25,6 +26,7 @@ export const MyServices: React.FC<Props> = ({ onLogout }) => {
   const [loadingStats, setLoadingStats] = useState(false);
   const [instructionModal, setInstructionModal] = useState<{ network: any; apiKey: string } | null>(null);
   const [paywallOpen, setPaywallOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'services' | 'networks'>('services');
 
   const load = async () => {
     setLoading(true); setError('');
@@ -177,7 +179,39 @@ export const MyServices: React.FC<Props> = ({ onLogout }) => {
         </div>
       </header>
 
+      {/* Tabs Navigation */}
+      <nav className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex space-x-8">
+            <button
+              onClick={() => setActiveTab('services')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === 'services'
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              🔑 Мои сервисы
+            </button>
+            <button
+              onClick={() => setActiveTab('networks')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === 'networks'
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              🧠 Управление нейросетями
+            </button>
+          </div>
+        </div>
+      </nav>
+
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        {activeTab === 'networks' ? (
+          <UserNetworkManager onBack={() => setActiveTab('services')} />
+        ) : (
+          <>
         <div className="flex justify-between items-center">
           <p className="text-gray-600">Управляйте своими API ключами и доступами к нейросетям.</p>
           <button onClick={openCreate} className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">+ Добавить сервис</button>
@@ -345,6 +379,9 @@ export const MyServices: React.FC<Props> = ({ onLogout }) => {
           </div>
         </div>
       )}
+          </>
+        )}
+      </main>
 
       {/* Модалка инструкции по подключению */}
       {instructionModal && (

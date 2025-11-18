@@ -214,7 +214,7 @@ export const userLogout = () => {
 export const oauthAuthorizeUrl = (provider: 'google' | 'yandex') => `${API_BASE}/api/user/auth/oauth2/authorize/${provider}`;
 
 // все запросы кабинета отправляем с user_token
-async function userFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+export async function userFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const base = import.meta.env.VITE_API_URL || 'http://localhost:8091';
   const token = localStorage.getItem('user_token');
   const headers = new Headers(options.headers ?? undefined);
