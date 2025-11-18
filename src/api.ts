@@ -223,7 +223,9 @@ async function userFetch<T>(endpoint: string, options: RequestInit = {}): Promis
   const resp = await fetch(`${base}${endpoint}`, { ...options, headers });
   if (!resp.ok) {
     const text = await resp.text();
-    throw new Error(text || `HTTP ${resp.status}`);
+    const error = new Error(text || `HTTP ${resp.status}`);
+    (error as any).status = resp.status;
+    throw error;
   }
   if (resp.status === 204) return {} as T;
   return resp.json();
@@ -242,4 +244,15 @@ export const setClientNetworks = (clientId: string, networkIds: string[]) =>
   userFetch<void>(`/api/user/clients/${clientId}/networks`, { method: 'PUT', body: JSON.stringify({ networkIds }) });
 
 export const getNetworkStats = (clientId: string) => userFetch<any[]>(`/api/user/clients/${clientId}/networks/stats`);
+
+// ==================== SUBSCRIPTIONS ====================
+
+export const getSubscriptionPlans = () => userFetch<any[]>('/api/user/subscriptions/plans');
+export const getCurrentSubscription = () => userFetch<any>('/api/user/subscriptions/current');
+export const createSubscription = (payload: { planName: string; paymentMethod: string }) =>
+  userFetch<any>('/api/user/subscriptions/create', { method: 'POST', body: JSON.stringify(payload) });
+export const cancelSubscription = (reason?: string) =>
+  userFetch<any>('/api/user/subscriptions/cancel', { method: 'POST', body: JSON.stringify({ reason: reason || 'Отменено пользователем' }) });
+export const getPaymentHistory = () => userFetch<any[]>('/api/user/subscriptions/payments/history');
+export const getPaymentStatus = (transactionId: string) => userFetch<any>(`/api/user/subscriptions/payment/${transactionId}/status`);
 
