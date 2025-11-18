@@ -65,8 +65,34 @@ function App() {
           }
         />
 
-        {/* По умолчанию ведем в кабинет пользователя */}
-        <Route path="*" element={<Navigate to="/app" replace />} />
+        {/* Главная страница с выбором входа */}
+        <Route
+          path="/"
+          element={
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600">
+              <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md text-center">
+                <h1 className="text-3xl font-bold text-gray-900 mb-6">AI Integration Service</h1>
+                <div className="space-y-4">
+                  <a
+                    href="/admin"
+                    className="block w-full bg-indigo-600 text-white py-3 px-4 rounded-lg hover:bg-indigo-700 transition-colors font-medium"
+                  >
+                    Вход для администратора
+                  </a>
+                  <a
+                    href="/app"
+                    className="block w-full bg-gray-600 text-white py-3 px-4 rounded-lg hover:bg-gray-700 transition-colors font-medium"
+                  >
+                    Вход для пользователя
+                  </a>
+                </div>
+              </div>
+            </div>
+          }
+        />
+
+        {/* По умолчанию ведем на главную */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );
