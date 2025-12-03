@@ -24,9 +24,12 @@ export interface NeuralNetwork {
   priority: number;
   timeoutSeconds: number;
   maxRetries: number;
+  requestMapping?: Record<string, any>;
+  responseMapping?: Record<string, any>;
   costPerTokenRub?: number;
   wordsPerToken?: number;
   secondsPerToken?: number;
+  connectionInstruction?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -49,6 +52,7 @@ export interface NetworkCreateRequest {
   costPerTokenRub?: number;
   wordsPerToken?: number;
   secondsPerToken?: number;
+  connectionInstruction?: string;
 }
 
 export interface ClientApplication {
