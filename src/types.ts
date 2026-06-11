@@ -86,6 +86,8 @@ export interface RequestLog {
   success: boolean;
   errorMessage?: string;
   tokensUsed?: number;
+  costUsd?: number | string;
+  provider?: string;
   createdAt: string;
 }
 
@@ -95,6 +97,11 @@ export interface UsageStats {
   failedRequests: number;
   totalTokensUsed: number;
   totalCostRub?: string | number;
+  totalCostUsd?: string | number;
+  monthlyTotalTokensUsed?: number;
+  monthlyTotalCostUsd?: string | number;
+  monthlyTokensByProvider?: Record<string, number>;
+  monthlyCostUsdByProvider?: Record<string, string | number>;
   requestsByNetwork: Record<string, number>;
   requestsByClient: Record<string, number>;
   tokensByNetwork?: Record<string, number>;
@@ -127,6 +134,15 @@ export interface UsageStats {
     requestsByNetwork?: Record<string, number>;
     tokensByNetwork?: Record<string, number>;
     costByNetwork?: Record<string, string | number>;
+  }>;
+  providerDetails?: Array<{
+    provider: string;
+    totalRequests: number;
+    successfulRequests: number;
+    failedRequests: number;
+    totalTokensUsed: number;
+    totalCostUsd?: string | number;
+    totalCostRub?: string | number;
   }>;
 }
 

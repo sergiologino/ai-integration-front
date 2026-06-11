@@ -84,20 +84,79 @@ export const StatsPanel: React.FC = () => {
       </div>
 
       {/* Токены и стоимость */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white rounded-lg shadow p-6">
-          <div className="text-sm font-medium text-gray-500 mb-2">Использовано токенов</div>
+          <div className="text-sm font-medium text-gray-500 mb-2">Использовано токенов (всего)</div>
           <div className="text-3xl font-bold text-gray-900">
             {stats.totalTokensUsed?.toLocaleString() || 0}
           </div>
         </div>
         <div className="bg-white rounded-lg shadow p-6">
-          <div className="text-sm font-medium text-gray-500 mb-2">Общая стоимость</div>
+          <div className="text-sm font-medium text-gray-500 mb-2">Токены за текущий месяц</div>
+          <div className="text-3xl font-bold text-gray-900">
+            {stats.monthlyTotalTokensUsed?.toLocaleString() || 0}
+          </div>
+        </div>
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="text-sm font-medium text-gray-500 mb-2">Общая стоимость (₽)</div>
           <div className="text-3xl font-bold text-indigo-600">
-            {stats.totalCostRub ? `${parseFloat(stats.totalCostRub).toFixed(2)} ₽` : '0.00 ₽'}
+            {stats.totalCostRub ? `${parseFloat(String(stats.totalCostRub)).toFixed(2)} ₽` : '0.00 ₽'}
+          </div>
+        </div>
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="text-sm font-medium text-gray-500 mb-2">Стоимость за месяц (USD)</div>
+          <div className="text-3xl font-bold text-indigo-600">
+            {stats.monthlyTotalCostUsd
+              ? `$${parseFloat(String(stats.monthlyTotalCostUsd)).toFixed(2)}`
+              : '$0.00'}
           </div>
         </div>
       </div>
+
+      {/* Статистика по провайдерам за текущий месяц */}
+      {stats.providerDetails && stats.providerDetails.length > 0 && (
+        <div className="bg-white rounded-lg shadow p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">За текущий месяц по провайдерам</h3>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Провайдер</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Запросы</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Успешных</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ошибок</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Токены</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">USD</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">₽</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {stats.providerDetails
+                  .sort((a, b) => (b.totalTokensUsed || 0) - (a.totalTokensUsed || 0))
+                  .map((provider) => (
+                    <tr key={provider.provider}>
+                      <td className="px-4 py-3 text-sm font-medium text-gray-900">{provider.provider}</td>
+                      <td className="px-4 py-3 text-sm text-gray-700">{provider.totalRequests || 0}</td>
+                      <td className="px-4 py-3 text-sm text-green-600">{provider.successfulRequests || 0}</td>
+                      <td className="px-4 py-3 text-sm text-red-600">{provider.failedRequests || 0}</td>
+                      <td className="px-4 py-3 text-sm text-gray-700">{(provider.totalTokensUsed || 0).toLocaleString()}</td>
+                      <td className="px-4 py-3 text-sm font-semibold text-indigo-600">
+                        {provider.totalCostUsd
+                          ? `$${parseFloat(String(provider.totalCostUsd)).toFixed(4)}`
+                          : '$0.0000'}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-700">
+                        {provider.totalCostRub
+                          ? `${parseFloat(String(provider.totalCostRub)).toFixed(2)} ₽`
+                          : '0.00 ₽'}
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* Детальная статистика по нейросетям */}
       {stats.networkDetails && stats.networkDetails.length > 0 && (

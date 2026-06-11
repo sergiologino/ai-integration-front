@@ -37,6 +37,24 @@ export const LogsViewer: React.FC = () => {
     return new Date(dateString).toLocaleString('ru-RU');
   };
 
+  const formatUsd = (value?: number | string | null) => {
+    if (value === undefined || value === null || value === '') {
+      return '-';
+    }
+    const num = typeof value === 'string' ? parseFloat(value) : value;
+    if (Number.isNaN(num)) {
+      return '-';
+    }
+    return `$${num.toFixed(4)}`;
+  };
+
+  const formatTokens = (value?: number | null) => {
+    if (value === undefined || value === null) {
+      return '-';
+    }
+    return value.toLocaleString('ru-RU');
+  };
+
   const truncateText = (text: string, maxLength: number = 140) => {
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength) + '...';
@@ -105,8 +123,14 @@ export const LogsViewer: React.FC = () => {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
                 Статус
               </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
+                Провайдер
+              </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-20">
                 Токены
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
+                USD
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
                 Действия
@@ -152,7 +176,13 @@ export const LogsViewer: React.FC = () => {
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {log.tokensUsed || '-'}
+                  {log.provider || '-'}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                  {formatTokens(log.tokensUsed)}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-indigo-700 font-medium">
+                  {formatUsd(log.costUsd)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                   <span className="text-gray-400">Открыть</span>
@@ -225,8 +255,16 @@ export const LogsViewer: React.FC = () => {
                   <div className="text-sm text-gray-900 font-mono break-all">{selectedLog.externalUserId}</div>
                 </div>
                 <div>
+                  <div className="text-xs text-gray-500">Провайдер</div>
+                  <div className="text-sm text-gray-900">{selectedLog.provider || '-'}</div>
+                </div>
+                <div>
                   <div className="text-xs text-gray-500">Токены</div>
-                  <div className="text-sm text-gray-900">{selectedLog.tokensUsed || '-'}</div>
+                  <div className="text-sm text-gray-900">{formatTokens(selectedLog.tokensUsed)}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-gray-500">Стоимость (USD)</div>
+                  <div className="text-sm text-gray-900">{formatUsd(selectedLog.costUsd)}</div>
                 </div>
               </div>
 
