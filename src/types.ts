@@ -18,6 +18,7 @@ export interface NeuralNetwork {
   provider: string;
   networkType: string;
   apiUrl: string;
+  hasApiSecret?: boolean;
   modelName: string;
   isActive: boolean;
   isFree: boolean;
@@ -41,6 +42,7 @@ export interface NetworkCreateRequest {
   networkType: string;
   apiUrl: string;
   apiKey: string;
+  apiSecret?: string;
   modelName: string;
   isActive: boolean;
   isFree: boolean;

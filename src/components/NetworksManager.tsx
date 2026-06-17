@@ -25,6 +25,7 @@ const buildEmptyForm = (): NetworkCreateRequest => ({
   networkType: 'chat',
   apiUrl: '',
   apiKey: '',
+  apiSecret: '',
   modelName: '',
   isActive: true,
   isFree: false,
@@ -46,6 +47,7 @@ const buildFormFromNetwork = (network: NeuralNetwork): NetworkCreateRequest => (
   provider: network.provider?.toLowerCase() ?? network.name?.split('-')?.[0] ?? '',
   networkType: network.networkType ?? 'chat',
   apiUrl: network.apiUrl ?? '',
+  apiSecret: '',
   modelName: network.modelName ?? '',
   isActive: network.isActive,
   isFree: network.isFree,
@@ -67,6 +69,7 @@ export const NetworksManager: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [editingNetwork, setEditingNetwork] = useState<NeuralNetwork | null>(null);
   const [showApiKey, setShowApiKey] = useState<boolean>(false);
+  const [showApiSecret, setShowApiSecret] = useState<boolean>(false);
 
   const [formData, setFormData] = useState<NetworkCreateRequest>(() => buildEmptyForm());
 
@@ -80,6 +83,8 @@ export const NetworksManager: React.FC = () => {
     { value: 'deepseek', label: 'DeepSeek' },
     { value: 'qwen', label: 'Qwen' },
     { value: 'pollinations', label: 'Pollinations' },
+    { value: 'fashn', label: 'FASHN' },
+    { value: 'kling', label: 'Kling AI' },
     { value: 'stability', label: 'Stability AI (SD3)' },
     { value: 'leonardo', label: 'Leonardo AI' },
     { value: 'midjourney', label: 'Midjourney' },
@@ -119,6 +124,7 @@ export const NetworksManager: React.FC = () => {
     setEditingNetwork(null);
     setFormData(buildEmptyForm());
     setShowApiKey(false);
+    setShowApiSecret(false);
     setIsModalOpen(true);
   };
 
@@ -126,6 +132,7 @@ export const NetworksManager: React.FC = () => {
     setEditingNetwork(network);
     setFormData(buildFormFromNetwork(network));
     setShowApiKey(false);
+    setShowApiSecret(false);
     setIsModalOpen(true);
   };
 
@@ -146,6 +153,8 @@ export const NetworksManager: React.FC = () => {
       const payload: NetworkCreateRequest = {
         ...formData,
         provider: formData.provider.trim(),
+        apiKey: formData.apiKey?.trim() ?? '',
+        apiSecret: formData.apiSecret?.trim() || undefined,
         requestMapping: formData.requestMapping ?? {},
         responseMapping: formData.responseMapping ?? {},
       };
@@ -742,7 +751,7 @@ export const NetworksManager: React.FC = () => {
 
                   <div className="col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      API Key {editingNetwork ? '(необязательно)' : '*'}
+                      API Key {formData.provider.trim().toLowerCase().startsWith('kling') ? '(Kling Access Key)' : editingNetwork ? '(необязательно)' : '*'}
                       <span 
                         className="ml-2 text-blue-500 cursor-help" 
                         title={editingNetwork 
@@ -767,6 +776,35 @@ export const NetworksManager: React.FC = () => {
                         className="absolute right-3 top-2 text-gray-500 hover:text-gray-700"
                       >
                         {showApiKey ? '🙈' : '👁️'}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      API Secret {editingNetwork ? '(необязательно)' : formData.provider.trim().toLowerCase().startsWith('kling') ? '*' : '(необязательно)'}
+                      <span
+                        className="ml-2 text-blue-500 cursor-help"
+                        title="Second provider credential. For Kling use Secret Key here; API Key above is Kling Access Key. Leave empty while editing to keep the stored value."
+                      >
+                        i
+                      </span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showApiSecret ? 'text' : 'password'}
+                        value={formData.apiSecret ?? ''}
+                        onChange={(e) => setFormData({ ...formData, apiSecret: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                        required={!editingNetwork && formData.provider.trim().toLowerCase().startsWith('kling')}
+                        placeholder={editingNetwork ? 'Leave empty to keep unchanged' : 'Kling Secret Key'}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowApiSecret(!showApiSecret)}
+                        className="absolute right-3 top-2 text-gray-500 hover:text-gray-700"
+                      >
+                        {showApiSecret ? 'Hide' : 'Show'}
                       </button>
                     </div>
                   </div>
